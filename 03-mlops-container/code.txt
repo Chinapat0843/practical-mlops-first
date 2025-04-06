@@ -1,0 +1,44 @@
+gcloud run deploy flask-predict   --source .   --region asia-southeast1   --platform managed   --allow-unauthenticated
+
+curl -X POST https://flask-predict-126555144190.asia-southeast1.run.app/predict   -H "Content-Type: application/json"   -d '{"chas": {"0": 0}, "rm": {"0": 6.575}, "tax": {"0": 296}, "ptratio": {"0": 15.3}, "b": {"0": 396.9}, "lstat": {"0": 4.98}}'
+
+# เปิด API
+gcloud services enable artifactregistry.googleapis.com
+
+
+############ สร้าง registry #####################
+gcloud artifacts repositories create my-mlops-repo \
+  --repository-format=docker \
+  --location=asia-southeast1
+
+# Auth Docker
+gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+
+# Tag image
+docker tag distilroberta-api asia-southeast1-docker.pkg.dev/YOUR_PROJECT_ID/my-mlops-repo/distilroberta-api:latest
+
+# Push image
+docker push asia-southeast1-docker.pkg.dev/YOUR_PROJECT_ID/my-mlops-repo/distilroberta-api:latest
+
+# test api
+curl -X POST https://distilroberta-api-abcdefg-uc.a.run.app/predict \
+  -H "Content-Type: application/json" \
+  -d '{"text": "MLOps is amazing!"}'
+
+
+
+
+#CICD 
+
+gcloud projects add-iam-policy-binding ml-practical-455904 \
+  --member="serviceAccount:github-ci@ml-practical-455904.iam.gserviceaccount.com" \
+  --role="roles/run.admin"
+
+gcloud projects add-iam-policy-binding ml-practical-455904 \
+  --member="serviceAccount:github-ci@ml-practical-455904.iam.gserviceaccount.com" \
+  --role="roles/artifactregistry.writer"
+
+
+gcloud iam service-accounts keys create key.json \
+  --iam-account=github-ci@ml-practical-455904.iam.gserviceaccount.com
+
