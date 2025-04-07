@@ -8,30 +8,40 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repo
+    - name: 📦 Checkout repo
       uses: actions/checkout@v3
 
-    - name: Set up Google Cloud SDK
+    - name: 🔐 Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
         service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ secrets.GCP_PROJECT_ID }}
         export_default_credentials: true
 
-    - name: Configure Docker auth
+    - name: 🧪 Debug GCP Auth & Permissions
+      run: |
+        echo "🔍 ตรวจสอบว่า SA ถูกต้องไหม"
+        gcloud auth list
+        echo ""
+        echo "🔍 ตรวจสอบ Project ที่ตั้งไว้"
+        gcloud config list project
+        echo ""
+        echo "🔍 ตรวจสอบว่า list Artifact Registry ได้ไหม"
+        gcloud artifacts repositories list --location=${{ secrets.GCP_REGION }}
+
+    - name: ⚙️ Configure Docker auth
       run: |
         gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev
 
-    - name: Build Docker image
+    - name: 🛠️ Build Docker image
       run: |
-          docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPO }}/distilroberta-api:latest ./04-mlops-CICD-ML/mlops-roberta
-      
-    - name: Push image to Artifact Registry
-      run: |
-          docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPO }}/distilroberta-api:latest
-      
+        docker build -t ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPO }}/distilroberta-api:latest ./04-mlops-CICD-ML/mlops-roberta
 
-    - name: Deploy to Cloud Run
+    - name: 🚀 Push image to Artifact Registry
+      run: |
+        docker push ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPO }}/distilroberta-api:latest
+
+    - name: 🌐 Deploy to Cloud Run
       run: |
         gcloud run deploy distilroberta-api \
           --image=${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_REPO }}/distilroberta-api:latest \
