@@ -7,7 +7,7 @@ WORKDIR /webapp
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 RUN apt-get update && apt-get install -y curl && \
-    curl -o distilroberta-sequence-classification.onnx https://storage.googleapis.com/ml-model-artifacts-first/distilroberta-sequence-classification.onnx
+    curl -o distilroberta-sequence-classification.onnx https://storage.cloud.google.com/ml-model-artifacts-first/distilroberta-sequence-classification.onnx
 
 COPY webapp/ /webapp/
 
