@@ -6,6 +6,9 @@ WORKDIR /webapp
 
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
+RUN apt-get update && apt-get install -y curl && \
+    curl -o distilroberta-sequence-classification.onnx https://storage.googleapis.com/ml-model-artifacts-first/distilroberta-sequence-classification.onnx
+
 COPY webapp/ /webapp/
 
 CMD ["gunicorn", "-w", "1", "-b", "0.0.0.0:8080", "app:app", "--timeout", "300", "--preload"]
