@@ -15,13 +15,12 @@ jobs:
     - name: 🔐 Set up Google Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ secrets.GCP_PROJECT_ID }}
         export_default_credentials: true
 
-    - name: ✅ Activate Service Account
+    - name: ✅ Decode SA key and activate
       run: |
-        echo "${{ secrets.GCP_SA_KEY }}" > sa-key.json
+        echo "${{ secrets.GCP_SA_KEY_B64 }}" | base64 -d > sa-key.json
         gcloud auth activate-service-account --key-file=sa-key.json
 
     - name: 🧪 Debug GCP Auth & Permissions
@@ -30,7 +29,7 @@ jobs:
         gcloud auth list
         echo "🔍 Project ที่ตั้งไว้"
         gcloud config list project
-        echo "🔍 ลอง list repo ดู"
+        echo "🔍 ลอง list Artifact Registry"
         gcloud artifacts repositories list --location=${{ secrets.GCP_REGION }}
 
     - name: ⚙️ Configure Docker auth
