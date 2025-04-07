@@ -7,6 +7,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
     - name: 📦 Checkout repo
       uses: actions/checkout@v3
@@ -18,15 +19,18 @@ jobs:
         project_id: ${{ secrets.GCP_PROJECT_ID }}
         export_default_credentials: true
 
+    - name: ✅ Activate Service Account
+      run: |
+        echo "${{ secrets.GCP_SA_KEY }}" > sa-key.json
+        gcloud auth activate-service-account --key-file=sa-key.json
+
     - name: 🧪 Debug GCP Auth & Permissions
       run: |
-        echo "🔍 ตรวจสอบว่า SA ถูกต้องไหม"
+        echo "🔍 ตรวจสอบว่า SA login สำเร็จหรือยัง"
         gcloud auth list
-        echo ""
-        echo "🔍 ตรวจสอบ Project ที่ตั้งไว้"
+        echo "🔍 Project ที่ตั้งไว้"
         gcloud config list project
-        echo ""
-        echo "🔍 ตรวจสอบว่า list Artifact Registry ได้ไหม"
+        echo "🔍 ลอง list repo ดู"
         gcloud artifacts repositories list --location=${{ secrets.GCP_REGION }}
 
     - name: ⚙️ Configure Docker auth
