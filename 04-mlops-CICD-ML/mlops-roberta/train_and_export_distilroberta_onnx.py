@@ -1,5 +1,5 @@
 from datasets import load_dataset
-from transformers import RobertaTokenizer, RobertaForSequenceClassification
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 from torch.utils.data import DataLoader
 import torch
 from torch.optim import AdamW
@@ -9,7 +9,7 @@ import torch.onnx
 
 print("🔹 Loading SST-2 subset (300 samples)...")
 dataset = load_dataset("glue", "sst2")
-tokenizer = RobertaTokenizer.from_pretrained("distilroberta-base")
+tokenizer = AutoTokenizer.from_pretrained("distilroberta-base")
 
 def tokenize(example):
     return tokenizer(example["sentence"], padding="max_length", truncation=True, max_length=128)
@@ -21,7 +21,7 @@ train_dataset = encoded_dataset["train"].select(range(300))
 train_loader = DataLoader(train_dataset, batch_size=8, shuffle=True)
 
 print("🔹 Initializing distilroberta-base model...")
-model = RobertaForSequenceClassification.from_pretrained("distilroberta-base", num_labels=2)
+model = AutoModelForSequenceClassification.from_pretrained("distilroberta-base", num_labels=2)
 
 optimizer = AdamW(model.parameters(), lr=5e-5)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -56,7 +56,7 @@ torch.onnx.export(
     (input_ids, attention_mask),
     "distilroberta-sequence-classification.onnx",
     input_names=["input_ids", "attention_mask"],
-    output_names=["output"],
+    output_names=["logits"],
     dynamic_axes={"input_ids": {0: "batch_size"}, "attention_mask": {0: "batch_size"}},
     opset_version=11
 )
@@ -75,3 +75,4 @@ prediction = np.argmax(outputs[0])
 label = "positive" if prediction == 1 else "negative"
 
 print(f"✅ ONNX Inference: '{sample_text}' → {label}")
+print("🔹 Done!")
